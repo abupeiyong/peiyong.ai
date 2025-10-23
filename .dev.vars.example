@@ -1,0 +1,4 @@
+# Environment Variables for Cloudflare Pages
+# Copy this file to .dev.vars for local development
+
+OPENAI_API_KEY=sk-your-openai-api-key-here

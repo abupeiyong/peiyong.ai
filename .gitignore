@@ -1,0 +1,14 @@
+# Cloudflare
+.dev.vars
+.wrangler/
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
