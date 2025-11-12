@@ -6,6 +6,8 @@ const targetLang = document.getElementById('target-lang');
 const translateBtn = document.getElementById('translate-btn');
 const speakSourceBtn = document.getElementById('speak-source');
 const speakTargetBtn = document.getElementById('speak-target');
+const downloadSourceBtn = document.getElementById('download-source');
+const downloadTargetBtn = document.getElementById('download-target');
 const clearBtn = document.getElementById('clear-btn');
 const copyBtn = document.getElementById('copy-btn');
 
@@ -22,6 +24,10 @@ const voiceSelect = document.getElementById('voice-select');
 
 // Audio player for OpenAI TTS
 let currentAudio = null;
+
+// Store audio blobs for download
+let sourceAudioBlob = null;
+let targetAudioBlob = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -110,7 +116,7 @@ translateBtn.addEventListener('click', async () => {
 });
 
 // Text-to-Speech function using OpenAI API
-async function speak(text, button) {
+async function speak(text, button, audioType) {
     // Stop any ongoing audio
     if (currentAudio) {
         currentAudio.pause();
@@ -153,6 +159,15 @@ async function speak(text, button) {
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
 
+        // Store audio blob for download
+        if (audioType === 'source') {
+            sourceAudioBlob = audioBlob;
+            downloadSourceBtn.disabled = false;
+        } else if (audioType === 'target') {
+            targetAudioBlob = audioBlob;
+            downloadTargetBtn.disabled = false;
+        }
+
         // Create and play audio
         currentAudio = new Audio(audioUrl);
         currentAudio.volume = parseFloat(volumeSlider.value);
@@ -182,16 +197,52 @@ async function speak(text, button) {
     }
 }
 
+// Download audio function
+function downloadAudio(audioBlob, filename) {
+    if (!audioBlob) {
+        alert('No audio available to download. Please generate audio first.');
+        return;
+    }
+
+    // Create a temporary download link
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    // Clean up
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
 // Speak source text
 speakSourceBtn.addEventListener('click', () => {
     const text = sourceText.value.trim();
-    speak(text, speakSourceBtn);
+    speak(text, speakSourceBtn, 'source');
 });
 
 // Speak target text
 speakTargetBtn.addEventListener('click', () => {
     const text = targetText.value.trim();
-    speak(text, speakTargetBtn);
+    speak(text, speakTargetBtn, 'target');
+});
+
+// Download source audio
+downloadSourceBtn.addEventListener('click', () => {
+    const voice = voiceSelect.value;
+    const filename = `original-audio-${voice}.mp3`;
+    downloadAudio(sourceAudioBlob, filename);
+});
+
+// Download target audio
+downloadTargetBtn.addEventListener('click', () => {
+    const voice = voiceSelect.value;
+    const filename = `translation-audio-${voice}.mp3`;
+    downloadAudio(targetAudioBlob, filename);
 });
 
 // Clear button
@@ -200,6 +251,12 @@ clearBtn.addEventListener('click', () => {
     targetText.value = '';
     speakTargetBtn.disabled = true;
     copyBtn.disabled = true;
+    downloadSourceBtn.disabled = true;
+    downloadTargetBtn.disabled = true;
+
+    // Clear stored audio blobs
+    sourceAudioBlob = null;
+    targetAudioBlob = null;
 
     // Stop any ongoing audio
     if (currentAudio) {

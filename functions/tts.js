@@ -71,12 +71,18 @@ export async function onRequest(context) {
     // Get audio data as ArrayBuffer
     const audioData = await response.arrayBuffer();
 
+    // Generate filename with voice and timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `tts-${selectedVoice}-${timestamp}.mp3`;
+
     // Return audio file
     return new Response(audioData, {
       status: 200,
       headers: {
         'Content-Type': 'audio/mpeg',
+        'Content-Disposition': `attachment; filename="${filename}"`,
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'Content-Disposition',
         'Cache-Control': 'public, max-age=3600',
       },
     });
