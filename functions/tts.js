@@ -71,7 +71,7 @@ export async function onRequest(context) {
     // Get audio data as ArrayBuffer
     const audioData = await response.arrayBuffer();
 
-    // Return audio file
+    // Return audio file (frontend handles download with custom filename)
     return new Response(audioData, {
       status: 200,
       headers: {
